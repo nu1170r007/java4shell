@@ -328,4 +328,3 @@ After upgrading: restart all JVM processes, rebuild container images.
 - [Oracle CPU](https://www.oracle.com/security-alerts/cspunov2026.html)
 - [Datadog Security Labs analysis](https://securitylabs.datadoghq.com/articles/java4shell-remote-code-execution-in-openjdk-cve-2026-114938/)
 - [JFrog analysis](https://research.jfrog.com/post/java4shell-vulnerability/)
-- [Upwind / java4shell.net](https://java4shell.net/)
