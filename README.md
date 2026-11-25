@@ -1,9 +1,5 @@
-<p align="center">
-  <img src="docs/cover.png" alt="java4shell" width="700">
-</p>
 
 <h1 align="center">java4shell</h1>
-<p align="center">
   <strong>CVE-2026-114938 — OpenJDK AVX-512 VBMI Base64 Heap Overflow PoC & Detection Toolkit</strong>
 
 ---
