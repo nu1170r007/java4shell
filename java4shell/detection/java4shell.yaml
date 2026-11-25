@@ -1,0 +1,114 @@
+title: Java4Shell CVE-2026-114938 Detection Rules (Sigma)
+id: f4e5b1a2-9c3d-4e6f-8a1b-2c3d4e5f6a7b
+status: stable
+description: Detect exploitation attempts and indicators of CVE-2026-114938
+
+---
+title: Java4Shell - Malformed Base64 in HTTP Basic Auth
+id: a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d
+status: experimental
+description: Detects Base64 strings with anomalous padding in Authorization headers
+logsource:
+    category: webserver
+    product: apache
+detection:
+    selection:
+        cs-method:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+        cs-uri-query|contains: "="
+    basic_auth:
+        cs-Authorization|startswith: "Basic "
+    malformed_padding:
+        cs-Authorization|re: "Basic\\s+(?:[A-Za-z0-9+/]{4})*[A-Za-z0-9+/]{0,2}=$"
+    condition: selection and basic_auth and malformed_padding
+level: high
+tags:
+    - attack.initial_access
+    - attack.t1190
+    - cve.2026.114938
+
+---
+title: Java4Shell - JVM Crash in GC (Post-Exploitation Indicator)
+id: b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e
+status: experimental
+description: Detects JVM crash logs indicative of heap corruption from Java4Shell
+logsource:
+    category: file_event
+    product: linux
+detection:
+    selection:
+        TargetFilename|endswith: ".log"
+        TargetFilename|contains: "hs_err_pid"
+    condition: selection
+level: medium
+tags:
+    - attack.impact
+    - cve.2026.114938
+
+---
+title: Java4Shell - Repeated Base64 Decode Exceptions
+id: c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f
+status: experimental
+description: >
+    Detects repeated IllegalArgumentException from Base64 decoder,
+    which occurs on every trigger attempt (exception thrown after corruption)
+logsource:
+    category: application
+    product: java
+detection:
+    selection:
+        Message|contains:
+            - "IllegalArgumentException"
+            - "Input byte array has wrong 4-byte ending unit"
+    timeframe: 5m
+    condition: selection | count() > 10
+level: high
+tags:
+    - attack.execution
+    - cve.2026.114938
+
+---
+title: Java4Shell - SIGSEGV in G1 Garbage Collector
+id: d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a
+status: experimental
+description: >
+    Detects JVM SIGSEGV crashes in G1 garbage collector, indicating
+    heap corruption from exploitation
+logsource:
+    category: process_creation
+    product: linux
+detection:
+    crash_signal:
+        Message|contains:
+            - "SIGSEGV"
+            - "G1ParScanThreadState"
+            - "StubRoutines"
+    java_process:
+        Image|endswith: "/java"
+    condition: crash_signal and java_process
+level: critical
+tags:
+    - attack.impact
+    - cve.2026.114938
+
+---
+title: Java4Shell - Warm-up Pattern (High Volume Base64 Requests)
+id: e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b
+status: experimental
+description: >
+    Detects the JIT warm-up phase: a single client sending thousands
+    of requests with Base64 content in rapid succession
+logsource:
+    category: webserver
+detection:
+    selection:
+        cs-Authorization|startswith: "Basic "
+    timeframe: 5m
+    condition: selection | count(c-ip) > 5000
+level: medium
+tags:
+    - attack.execution
+    - cve.2026.114938
